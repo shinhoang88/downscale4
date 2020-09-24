@@ -20,7 +20,9 @@ In these videos, the EE stiffness is modulated so that it can move freely along 
 ![Optional Text](https://github.com/shinhoang88/media_files/blob/master/FreelyAlongYaxis_StifferAlongXZAxis.gif)
 
 ## 3) Master-Slave teleoperation:
+
 Master device: Phantom Omni (6-DOF)
+
 Slave: 7-DOF heavy-duty manipulator
 
 For doing a remote task, the manipulator can be controlled by the master device. In the task-space of the manipulator, it can avoid the obstacle using its redundancy by changing the arm angle.
@@ -30,3 +32,12 @@ For doing a remote task, the manipulator can be controlled by the master device.
 ![Optional Text](https://github.com/shinhoang88/media_files/blob/master/teleoperation_sim.gif)
 
 ### b) Experiment:
+
+Teleoperation with position and orientation:
+
+![Optional Text](https://github.com/shinhoang88/media_files/blob/master/Teleoperation_test1.gif)
+
+Changing the arm angle: 
+
+![Optional Text](https://github.com/shinhoang88/media_files/blob/master/Teleoperation_test2.gif)
+
