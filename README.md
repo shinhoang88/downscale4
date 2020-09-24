@@ -10,5 +10,12 @@ https://github.com/shinhoang88/downscale4/blob/master/src/pmaccartesianstiffness
 
 In this video, the EE stiffness is modulated as it can move freely along Y-axis while is still stiff along X and Z axes.
 
+### a) Simulation result:
+
+![Optional Text](https://github.com/shinhoang88/media_files/blob/master/stiffness_largexz_smally.gif)
+
+### b) Experiment result:
+
 ![Optional Text](https://github.com/shinhoang88/media_files/blob/master/FreelyAlongYaxis_StifferAlongXZAxis.gif)
+
 
