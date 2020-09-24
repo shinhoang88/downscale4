@@ -1,0 +1,456 @@
+<!-- -*- mode: xml -*- -->
+
+<robot name="downscale">
+  <!-- Import Rviz colors -->
+  <material name="Grey">
+    <color rgba="0.2 0.2 0.2 1.0"/>
+  </material>
+  <material name="Orange">
+    <color rgba="1.0 0.423529411765 0.0392156862745 1.0"/>
+  </material>
+  <material name="Blue">
+    <color rgba="0.5 0.7 1.0 1.0"/> 
+  </material>
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0"/>  
+  </material>
+  <material name="LightGrey">
+    <color rgba="0.7 0.7 0.7 1.0"/>        
+  </material>	
+
+  <link
+    name="base">
+    <inertial>
+      <origin
+        xyz="2.2905721294153E-06 -1.61414290298367E-05 0.109058751369314"
+        rpy="0 0 0" />
+      <mass
+        value="51.8879208121622" />
+      <inertia
+        ixx="0.107369583999488"
+        ixy="3.45293516306737E-07"
+        ixz="-1.7002845553287E-05"
+        iyy="0.106711898425272"
+        iyz="0.000112248488911704"
+        izz="0.00463126223108742" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/base.STL" />
+      </geometry>
+      <material name="LightGrey"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/base.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="L1">
+    <inertial>
+      <origin
+        xyz="-1.40503961643113E-06 0.0162520141256575 -0.0389516002710833"
+        rpy="0 0 0" />
+      <mass
+        value="3.82018600703481" />
+      <inertia
+        ixx="0.0312186813390308"
+        ixy="-8.25822321785251E-07"
+        ixz="1.00573651071059E-06"
+        iyy="0.0117066214028649"
+        iyz="-0.00266196426941311"
+        izz="0.0196261014510845" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L1.STL" />
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.571000000000001"
+      rpy="0 0 0" />
+    <parent
+      link="base" />
+    <child
+      link="L1" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14159"
+      upper="3.14159"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L2">
+    <inertial>
+      <origin
+        xyz="-6.78726905284366E-05 0.00193902497612969 0.206300822439238"
+        rpy="0 0 0" />
+      <mass
+        value="2.90084024994969" />
+      <inertia
+        ixx="0.0577752595559213"
+        ixy="-8.21630775582414E-08"
+        ixz="3.80559781287884E-05"
+        iyy="0.0451694272674874"
+        iyz="0.0013266761278417"
+        izz="0.0149066647182046" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L2.STL" />
+      </geometry>
+      <material name="LightGrey"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J2"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="L1" />
+    <child
+      link="L2" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-1.91986"
+      upper="1.91986"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L3">
+    <inertial>
+      <origin
+        xyz="-5.6635250093362E-05 0.0200224096634917 -0.030685403640807"
+        rpy="0 0 0" />
+      <mass
+        value="2.04242878532359" />
+      <inertia
+        ixx="0.0137939832039614"
+        ixy="-8.30215189429191E-06"
+        ixz="3.71834240965217E-06"
+        iyy="0.00420302684340593"
+        iyz="-0.00129387872307497"
+        izz="0.00964293808737675" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L3.STL" />
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J3"
+    type="revolute">
+    <origin
+      xyz="0 0 0.547"
+      rpy="0 0 -7.35972077678528E-17" />
+    <parent
+      link="L2" />
+    <child
+      link="L3" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14159"
+      upper="3.14159"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L4">
+    <inertial>
+      <origin
+        xyz="6.16640638659849E-05 0.00191795288527713 0.189508428978352"
+        rpy="0 0 0" />
+      <mass
+        value="1.77641972949222" />
+      <inertia
+        ixx="0.0258869277460313"
+        ixy="1.30675841754291E-06"
+        ixz="-2.8529879165025E-06"
+        iyy="0.0200868822533137"
+        iyz="0.00084127373482839"
+        izz="0.00668727677083832" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L4.STL" />
+      </geometry>
+      <material name="LightGrey"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J4"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="L3" />
+    <child
+      link="L4" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-2.61799"
+      upper="2.61799"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L5">
+    <inertial>
+      <origin
+        xyz="-0.000102265913206057 0.0035794784269399 -0.024596073255345"
+        rpy="0 0 0" />
+      <mass
+        value="1.16222465310862" />
+      <inertia
+        ixx="0.00473693858341341"
+        ixy="-5.40342574980917E-06"
+        ixz="2.57585847244667E-06"
+        iyy="0.00147340832139742"
+        iyz="-0.000122624552624032"
+        izz="0.00327727690561438" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L5.STL" />
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J5"
+    type="revolute">
+    <origin
+      xyz="0 0 0.483999999999999"
+      rpy="0 0 -1.08089488645768E-16" />
+    <parent
+      link="L4" />
+    <child
+      link="L5" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14159"
+      upper="3.14159"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.1"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L6">
+    <inertial>
+      <origin
+        xyz="5.86989553775785E-05 0.00199818879522046 0.140833738111627"
+        rpy="0 0 0" />
+      <mass
+        value="1.11995233933703" />
+      <inertia
+        ixx="0.00736730167051378"
+        ixy="6.51011014885253E-07"
+        ixz="-1.24797146947973E-06"
+        iyy="0.00540698480228368"
+        iyz="0.000419112532779327"
+        izz="0.00250484335129939" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L6.STL" />
+      </geometry>
+      <material name="LightGrey"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L6.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J6"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="L5" />
+    <child
+      link="L6" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="-1.91986"
+      upper="1.91986"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+  <link
+    name="L7">
+    <inertial>
+      <origin
+        xyz="-1.2189E-07 0.071391 8.1834E-09"
+        rpy="0 0 0" />
+      <mass
+        value="0.55554" />
+      <inertia
+        ixx="0.00024889"
+        ixy="3.6031E-11"
+        ixz="4.7086E-10"
+        iyy="0.00036473"
+        iyz="-6.1886E-11"
+        izz="0.00024245" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L7_v1.STL" />
+      </geometry>
+      <material name="Orange"/>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://meshes/L7_v1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="J7"
+    type="revolute">
+    <origin
+      xyz="0 0 0.247"
+      rpy="1.5708 0 -1.5708" />
+    <parent
+      link="L6" />
+    <child
+      link="L7" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-3.14159"
+      upper="3.14159"
+      effort="300"
+      velocity="1" />
+    <dynamics
+      damping="0.5"
+      friction="0.1" />
+  </joint>
+</robot>
