@@ -61,3 +61,6 @@ https://github.com/shinhoang88/downscale4/blob/master/src/codequartercircle.cpp
 
 ![Optional Text](https://github.com/shinhoang88/media_files/blob/master/TorqueMinimization_v2_2.gif)
 
+- Author        : Phi Tien Hoang
+- E-mail        : phitien@skku.edu
+- Organization  : Robotory-SKKU-S.Korea
