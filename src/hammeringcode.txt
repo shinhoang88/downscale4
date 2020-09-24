@@ -1,0 +1,234 @@
+//Hammering TASK if have
+        if (Buttons[0] == 1 && Inkwell == 1)
+        //If Inkwell is at init pos, button0 is clicked -> Do the HAMMERING task at this pos
+        {
+            //Compute phi angle
+            if (p_e(0,0) == 0)
+            {
+                phi = pi/2;		//xe/ye
+            }
+            else phi = atan(p_e(1,0)/p_e(0,0));		//ye/xe
+            
+            //phi = atan2(p_e(1,0),p_e(1,0));		//xe/ye
+            
+            p_temp1 = rotz(-phi)*p_e;
+            p_e = p_temp1;
+
+            //**********Hammering Task Computing******************************************************
+            if (p_e(0,0) > 0)	{	p(0,0) = sqrt(fabs(pow(p_e(0,0),2) - pow(inz,2)));}	//x
+            if (p_e(0,0) < 0)	{	p(0,0) = -sqrt(fabs(pow(p_e(0,0),2) - pow(inz,2)));}	//-x
+            
+            p(1,0) = p_e(1,0);					//y absolutely 0
+            p(2,0) = inz + p_e(2,0);			//z
+            
+            p_temp2 = rotz(phi)*p;
+            alpha = asin(inz/p_e(0,0));
+            //rotm = rotz(phi)*roty(-alpha)*rotx(pi);
+            rotm = rotz(phi)*roty(-alpha)*rotx(pi);
+
+            
+            P_HAM.topLeftCorner(3,3) = rotm;
+            P_HAM(0,3) = p_temp2(0,0);	//x
+            P_HAM(1,3) = p_temp2(1,0);	//y
+            P_HAM(2,3) = p_temp2(2,0);	//z
+            
+            //std::cout << P_HAM << sep;
+            
+            InvK7(P_HAM, psi_ham);
+            desired_theta(0,0) = q[0];		//Joint 1 desired angle	
+            desired_theta(1,0) = q[1];		//Joint 2 desired angle
+            desired_theta(2,0) = q[2];		//Joint 3 desired angle
+            desired_theta(3,0) = q[3];		//Joint 4 desired angle
+            desired_theta(4,0) = q[4];		//Joint 5 desired angle
+            desired_theta(5,0) = q[5];		//Joint 6 desired angle
+            desired_theta(6,0) = q[6];		//Joint 7 desired angle
+                
+            //Update current joint angles: in radian 
+            current_theta(0,0) = current_joint_states[0];
+            current_theta(1,0) = current_joint_states[1];
+            current_theta(2,0) = current_joint_states[2];
+            current_theta(3,0) = current_joint_states[3];
+            current_theta(4,0) = current_joint_states[4];
+            current_theta(5,0) = current_joint_states[5];
+            current_theta(6,0) = current_joint_states[6];
+                
+            //Compute joint position error [rad]
+            for (int i=0; i<7; i++)
+            {
+                theta_err1(i,0) = desired_theta(i,0) - current_theta(i,0);
+            }
+            printf("Joint angle errors: %.2f %.2f %.2f %.2f %.2f %.2f %.2f\n", theta_err1(0,0), theta_err1(1,0), theta_err1(2,0), theta_err1(3,0), theta_err1(4,0), theta_err1(5,0), theta_err1(6,0));
+
+                while ((theta_err1.norm()>0.12) || (inz == 0))
+                //Manipulator doesn't reach current discrete desired position
+                {
+                    //printf("time taken = %.5f \n", time_taken);		
+                    // Calculate the time taken by fun() 
+                    clock_t t; 
+                    t = clock();
+                    myfile << inz;
+                    myfile << "\n";
+
+                    //Update current joint angles: in radian 
+                    current_theta(0,0) = current_joint_states[0];
+                    current_theta(1,0) = current_joint_states[1];
+                    current_theta(2,0) = current_joint_states[2];
+                    current_theta(3,0) = current_joint_states[3];
+                    current_theta(4,0) = current_joint_states[4];
+                    current_theta(5,0) = current_joint_states[5];
+                    current_theta(6,0) = current_joint_states[6];
+                        
+                    //Compute joint position error [rad]
+                    for (int i=0; i<7; i++)
+                    {
+                        theta_err1(i,0) = desired_theta(i,0) - current_theta(i,0);
+                    }
+                    printf("Joint angle errors: %.5f , inz = %.2f \n", theta_err1.norm(), inz);
+                                    
+                    //Joint velocity error convert  for PD control
+                    for (int i=0; i<7; i++)
+                    {
+                        dtheta_err(i,0) = (theta_err1(i,0) - theta_err2(i,0))/time_taken;
+                        //Back up for next loop
+                        theta_err2(i,0) = theta_err1(i,0);
+                    }
+                    
+                    //Friction and Gravity compensate based on actual positions and velocities
+                    for (int i=0; i<7; i++)
+                    {
+                        /*
+                        //Friction compensate Torque function -> Ampere (A)			
+                        //If Vel << --- set 0: filter
+                        if (fabs(current_dtheta(i,0)) < dtheta_threshold) current_dtheta(i,0) = 0;
+                    
+                        //Friction compensator function
+                        Friction_I(i,0) = frictioncomptorque(i, current_dtheta(i,0));
+
+                        //If >> positive --- set fric_amp_lim[i] rad/s
+                        if (current_dtheta(i,0) > fric_amp_lim[i]) Friction_I(i,0) = fric_amp_lim[i];
+                        //If >> negative --- set -fric_amp_lim[i] rad/s
+                        else if (current_dtheta(i,0) < -fric_amp_lim[i]) Friction_I(i,0) = -fric_amp_lim[i];
+                        */ 
+
+                        //Gravity compensate torque -> [Nm]
+                        Gravity_T(i,0) = gravitycomptorque(i, current_joint_states);
+                    }
+                    
+
+                    //Gravity_T(5,0) = 0;
+                    //Update Jacobian matrix
+                    //20190406 Results of Jacobian 6x7 - (correct)
+                    Jacob(0,0) = - 1.0*d5*(sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1])) - 1.0*d7*(cos(current_joint_states[5])*(sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1])) + sin(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2])))) - d3*sin(current_joint_states[0])*sin(current_joint_states[1]);
+                    Jacob(0,1) = 1.0*d5*(1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3])) - 1.0*d7*(sin(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) - cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4])) - cos(current_joint_states[5])*(1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3]))) + d3*cos(current_joint_states[0])*cos(current_joint_states[1]);
+                    Jacob(0,2) = 1.0*d7*(sin(current_joint_states[5])*(sin(current_joint_states[4])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - cos(current_joint_states[3])*cos(current_joint_states[4])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]))) - cos(current_joint_states[5])*sin(current_joint_states[3])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]))) - 1.0*d5*sin(current_joint_states[3])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]));
+                    Jacob(0,3) = - 1.0*d5*(cos(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - 1.0*d7*(cos(current_joint_states[5])*(cos(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - cos(current_joint_states[4])*sin(current_joint_states[5])*(sin(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])));
+                    Jacob(0,4) = 1.0*d7*sin(current_joint_states[5])*(sin(current_joint_states[4])*(cos(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - cos(current_joint_states[4])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2])));
+                    Jacob(0,5) = 1.0*d7*(sin(current_joint_states[5])*(sin(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])) - cos(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]))));
+                    Jacob(0,6) = 0;
+
+                    Jacob(1,0) = d3*cos(current_joint_states[0])*sin(current_joint_states[1]) - d5*(sin(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])) - d7*(sin(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]))) + cos(current_joint_states[5])*(sin(current_joint_states[3])*(sin(current_joint_states[0])*sin(current_joint_states[2]) - cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])));
+                    Jacob(1,1) = d5*(cos(current_joint_states[1])*cos(current_joint_states[3])*sin(current_joint_states[0]) - cos(current_joint_states[2])*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + d7*(cos(current_joint_states[5])*(cos(current_joint_states[1])*cos(current_joint_states[3])*sin(current_joint_states[0]) - cos(current_joint_states[2])*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - sin(current_joint_states[5])*(cos(current_joint_states[4])*(1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[3]) + cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4]))) + d3*cos(current_joint_states[1])*sin(current_joint_states[0]);
+                    Jacob(1,2) = d5*sin(current_joint_states[3])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2])) - d7*(sin(current_joint_states[5])*(sin(current_joint_states[4])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - cos(current_joint_states[3])*cos(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2]))) - cos(current_joint_states[5])*sin(current_joint_states[3])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2])));
+                    Jacob(1,3) = d5*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + d7*(cos(current_joint_states[5])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - cos(current_joint_states[4])*sin(current_joint_states[5])*(sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1])));
+                    Jacob(1,4) = -d7*sin(current_joint_states[5])*(sin(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - cos(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2])));
+                    Jacob(1,5) = d7*(cos(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2]))) - sin(current_joint_states[5])*(sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1])));
+                    Jacob(1,6) = 0;
+
+                    Jacob(2,0) = 0;
+                    Jacob(2,1) = 1.0*d7*(sin(current_joint_states[5])*(cos(current_joint_states[4])*(sin(current_joint_states[1])*sin(current_joint_states[3]) - cos(current_joint_states[1])*cos(current_joint_states[2])*cos(current_joint_states[3])) + 1.0*cos(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4])) - 1.0*cos(current_joint_states[5])*(cos(current_joint_states[3])*sin(current_joint_states[1]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[3]))) - d3*sin(current_joint_states[1]) - d5*(cos(current_joint_states[3])*sin(current_joint_states[1]) + 1.0*cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[3]));
+                    Jacob(2,2) = 1.0*d7*(sin(current_joint_states[5])*(1.0*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[4]) + cos(current_joint_states[3])*cos(current_joint_states[4])*sin(current_joint_states[1])*sin(current_joint_states[2])) + 1.0*cos(current_joint_states[5])*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[3])) + 1.0*d5*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[3]);
+                    Jacob(2,3) = - d5*(cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*d7*(1.0*cos(current_joint_states[5])*(cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) + cos(current_joint_states[4])*sin(current_joint_states[5])*(cos(current_joint_states[1])*cos(current_joint_states[3]) - cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3])));
+                    Jacob(2,4) = 1.0*d7*sin(current_joint_states[5])*(sin(current_joint_states[4])*(cos(current_joint_states[1])*sin(current_joint_states[3]) + cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) + 1.0*cos(current_joint_states[4])*sin(current_joint_states[1])*sin(current_joint_states[2]));
+                    Jacob(2,5) = -1.0*d7*(cos(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[1])*sin(current_joint_states[3]) + cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4])) + 1.0*sin(current_joint_states[5])*(cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3])));
+                    Jacob(2,6) = 0;
+
+                    Jacob(3,0) = -1.0*sin(current_joint_states[0]);
+                    Jacob(3,1) = cos(current_joint_states[0])*sin(current_joint_states[1]);
+                    Jacob(3,2) = - 1.0*cos(current_joint_states[2])*sin(current_joint_states[0]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]);
+                    Jacob(3,3) = 1.0*cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1]) - 1.0*sin(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2]));
+                    Jacob(3,4) = sin(current_joint_states[4])*(1.0*cos(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) - 1.0*cos(current_joint_states[4])*(1.0*cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2]));
+                    Jacob(3,5) = - 1.0*cos(current_joint_states[5])*(1.0*sin(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[5])*(1.0*sin(current_joint_states[4])*(1.0*cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2])) + 1.0*cos(current_joint_states[4])*(1.0*cos(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])));
+                    Jacob(3,6) = - 1.0*cos(current_joint_states[5])*(1.0*sin(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[5])*(1.0*sin(current_joint_states[4])*(1.0*cos(current_joint_states[2])*sin(current_joint_states[0]) + 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*sin(current_joint_states[2])) + 1.0*cos(current_joint_states[4])*(1.0*cos(current_joint_states[3])*(1.0*sin(current_joint_states[0])*sin(current_joint_states[2]) - 1.0*cos(current_joint_states[0])*cos(current_joint_states[1])*cos(current_joint_states[2])) + 1.0*cos(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])));
+
+
+                    Jacob(4,0) = cos(current_joint_states[0]);
+                    Jacob(4,1) = sin(current_joint_states[0])*sin(current_joint_states[1]);
+                    Jacob(4,2) = cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2]);
+                    Jacob(4,3) = sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1]);
+                    Jacob(4,4) = cos(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2])) - 1.0*sin(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3]));
+                    Jacob(4,5) = sin(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2]))) + cos(current_joint_states[5])*(1.0*sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1]));
+                    Jacob(4,6) = sin(current_joint_states[5])*(cos(current_joint_states[4])*(cos(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) - 1.0*sin(current_joint_states[0])*sin(current_joint_states[1])*sin(current_joint_states[3])) + sin(current_joint_states[4])*(cos(current_joint_states[0])*cos(current_joint_states[2]) - 1.0*cos(current_joint_states[1])*sin(current_joint_states[0])*sin(current_joint_states[2]))) + cos(current_joint_states[5])*(1.0*sin(current_joint_states[3])*(cos(current_joint_states[0])*sin(current_joint_states[2]) + cos(current_joint_states[1])*cos(current_joint_states[2])*sin(current_joint_states[0])) + 1.0*cos(current_joint_states[3])*sin(current_joint_states[0])*sin(current_joint_states[1]));
+
+                    Jacob(5,0) = 0;
+                    Jacob(5,1) = 1.0*cos(current_joint_states[1]);
+                    Jacob(5,2) = 1.0*sin(current_joint_states[1])*sin(current_joint_states[2]);
+                    Jacob(5,3) = 1.0*cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3]);
+                    Jacob(5,4) = sin(current_joint_states[4])*(1.0*cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) + 1.0*cos(current_joint_states[4])*sin(current_joint_states[1])*sin(current_joint_states[2]);
+                    Jacob(5,5) = cos(current_joint_states[5])*(1.0*cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3])) - 1.0*sin(current_joint_states[5])*(1.0*cos(current_joint_states[4])*(1.0*cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4]));
+                    Jacob(5,6) = cos(current_joint_states[5])*(1.0*cos(current_joint_states[1])*cos(current_joint_states[3]) - 1.0*cos(current_joint_states[2])*sin(current_joint_states[1])*sin(current_joint_states[3])) - 1.0*sin(current_joint_states[5])*(1.0*cos(current_joint_states[4])*(1.0*cos(current_joint_states[1])*sin(current_joint_states[3]) + 1.0*cos(current_joint_states[2])*cos(current_joint_states[3])*sin(current_joint_states[1])) - 1.0*sin(current_joint_states[1])*sin(current_joint_states[2])*sin(current_joint_states[4]));
+
+
+                    //Compute Jacobian transpose and pseudo inverse
+                    Trans_Jacob = Jacob.transpose();
+                
+                    //Joint stiffness matrix 7x7
+                    Kmin = Trans_Jacob*Kx*Jacob;
+                    Knull = (I7-K0*Trans_Jacob*(Jacob*K0*Trans_Jacob).inverse()*Jacob)*K0;
+
+                    Ki = Kmin + Knull;
+
+                    //Joint damping matrix 7x7
+                    Di = Trans_Jacob*Dx*Jacob;
+                    
+                    //std::cout << Ki << sep;
+                    //std::cout << Di << sep;
+                    
+                    /*
+                    for (int i=0; i<7; i++)
+                    {
+                        command_tau[i] = Ki(i,i)*theta_err1(i,0) + Di(i,i)*dtheta_err(i,0); // + Gravity_T(i,0);
+                        printf("comT[%d]= %.2f \n", i, command_tau[i]);
+                        
+                    }
+                    */
+                    //Tau_I = Ki*theta_err1 + Di*dtheta_err;
+                    Tau_I = 15*theta_err1 + 5*dtheta_err;
+                    command_tau[0] = Tau_I(0,0);
+                    command_tau[1] = Tau_I(1,0);
+                    command_tau[2] = Tau_I(2,0);
+                    command_tau[3] = Tau_I(3,0);
+                    command_tau[4] = Tau_I(4,0);
+                    command_tau[5] = Tau_I(5,0);
+                    command_tau[6] = Tau_I(6,0);
+                    
+                    /*		
+                    command_tau[0] = 300*theta_err1(0,0) + 50*dtheta_err(0,0) + Gravity_T(0,0);
+                    command_tau[1] = 1200*theta_err1(1,0) + 90*dtheta_err(1,0) + Gravity_T(1,0);
+                    command_tau[2] = 300*theta_err1(2,0) + 50*dtheta_err(2,0) + Gravity_T(2,0);
+                    command_tau[3] = 900*theta_err1(3,0) + 60*dtheta_err(3,0) + Gravity_T(3,0);
+                    command_tau[4] = 300*theta_err1(4,0) + 50*dtheta_err(4,0) + Gravity_T(4,0);
+                    command_tau[5] = 300*theta_err1(5,0) + 50*dtheta_err(5,0) + Gravity_T(5,0);
+                    command_tau[6] = 300*theta_err1(6,0) + 50*dtheta_err(6,0) + Gravity_T(6,0);
+                    */
+                    //Command torque
+                    if (runfirst==0) jointt_publish(command_tau);
+                    else runfirst = runfirst - 1;
+                    command_tau[0] = (command_tau[0]*1000)/(Nhd[0]*Kt[0]*Icon[0]);
+                    command_tau[1] = (command_tau[1]*1000)/(Nhd[1]*Kt[1]*Icon[1]);
+                    command_tau[2] = (command_tau[2]*1000)/(Nhd[2]*Kt[2]*Icon[2]);
+                    command_tau[3] = (command_tau[3]*1000)/(Nhd[3]*Kt[3]*Icon[3]);
+                    command_tau[4] = (command_tau[4]*1000)/(Nhd[4]*Kt[4]*Icon[4]);
+                    command_tau[5] = (command_tau[5]*1000)/(Nhd[5]*Kt[5]*Icon[5]);
+                    command_tau[6] = (command_tau[6]*1000)/(Nhd[6]*Kt[6]*Icon[6]);
+                    //printf("%.2f %.2f %.2f %.2f %.2f %.2f %.2f \n", command_tau[0], command_tau[1], command_tau[2], command_tau[3], command_tau[4], command_tau[5], command_tau[6]);
+
+                    ros::spinOnce();
+                    t = clock() - t; 
+                    time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+
+                }   //end while hammering
+            
+                //Manipulator reached current discrete desired position 
+                inz = inz - 0.01;
+                if (inz<0) inz = 0;
+        } //end if if (Buttons[0] == 1 && Inkwell == 1)
