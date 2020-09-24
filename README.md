@@ -41,3 +41,23 @@ Changing the arm angle:
 
 ![Optional Text](https://github.com/shinhoang88/media_files/blob/master/Teleoperation_test2.gif)
 
+## 4) A New Torque Minimization Method for Heavy-duty Redundant Manipulators Used in Nuclear Decommissioning Tasks:
+
+This propose a method to optimize the control torque of heavy-duty redundant manipulators used for dismantling nuclear power plants:
+
+### a) Simulation:
+
+For the given straight line trajectory:
+
+https://github.com/shinhoang88/downscale4/blob/master/src/codestraightline.cpp
+
+For the given quarter-circle trajectory:
+
+https://github.com/shinhoang88/downscale4/blob/master/src/codequartercircle.cpp
+
+### b) Experiments:
+
+![Optional Text](https://github.com/shinhoang88/media_files/blob/master/TorqueMinimization_v2_1.gif)
+
+![Optional Text](https://github.com/shinhoang88/media_files/blob/master/TorqueMinimization_v2_2.gif)
+
