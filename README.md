@@ -44,6 +44,8 @@ Changing the arm angle:
 ## 4) A New Torque Minimization Method for Heavy-duty Redundant Manipulators Used in Nuclear Decommissioning Tasks:
 
 This propose a method to optimize the control torque of heavy-duty redundant manipulators used for dismantling nuclear power plants:
+Publication link (Intelligent Service Robotics Journal, June 2021): 
+https://link.springer.com/article/10.1007/s11370-021-00369-4?fbclid=IwAR3jAI8fR9KF3hXJEAc2UAzcSdmKRs8COPxPR_UjFViFLxrrwdPMLkHMzn8
 
 ### a) Simulation:
 
